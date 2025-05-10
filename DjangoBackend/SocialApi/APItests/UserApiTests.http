@@ -1,0 +1,68 @@
+### Post to create a user
+POST localhost:8000/auth/register/
+Content-Type: application/json
+
+{
+    "username": "user",
+    "password": "Pdm4w567!",
+    "confirmed_password": "Pdm4w567!",
+    "email": "email@email.com",
+    "first_name": "first",
+    "last_name": "last"
+}
+
+> {%
+    //Test to see if the request was successful as it should be
+    client.test("Request Success", function(){
+        client.assert(response.body['success'] === true, "Request was not successful")
+    })
+    //Make sure the data returned matched the data sent
+   client.test("User Created Correctly", function(){
+       client.assert(response.status === 201, "User was not created")
+       client.assert(response.body['user']['id'] === 1, "User ID was not created")
+       client.assert(response.body['user']['username'] === "user", "Username was not created")
+       client.assert(response.body['user']['email'] === "email@email.com", "Email was not created")
+       client.assert(response.body['user']['first_name'] === "first", "First Name was not created")
+       client.assert(response.body['user']['last_name'] === "last", "Last Name was not created")
+   })
+
+    //Make sure the status code is correctd
+    client.test("Status Code", function(){
+        client.assert(response.status === 201, "Status Code was not 201")
+    })
+ %}
+
+### Post To login
+POST localhost:8000/auth/login/
+Content-Type: application/json
+
+{
+    "username": "user",
+    "password": "Pdm4w567!"
+}
+
+> {%
+    //Test to see if the request was successful as it should be
+    client.test("Request Success", function(){
+        client.assert(response.body['success'] === true, "Request was not successful")
+    })
+
+    //Make sure data returned is correct
+    client.test("data response is correct", function(){
+        client.assert(response.body['user']['id'] === 1, "User ID was not created")
+        client.assert(response.body['user']['username'] === "user", "Username was not created")
+        client.assert(response.body['user']['email'] === "email@email.com", "Email was not created")
+        client.assert(response.body['user']['first_name'] === "first", "First Name was not created")
+        client.assert(response.body['user']['last_name'] === "last", "Last Name was not created")
+    })
+
+    //Make sure the status code is correct
+    client.test("Status Code", function(){
+        client.assert(response.status === 200, "Status Code was not 200")
+    })
+
+    //Set the access token to a global variable for later tests
+    client.global.set("access_token", response.body['access'])
+ %}
+### Test DB Reset
+POST localhost:8000/api/reset_db/
