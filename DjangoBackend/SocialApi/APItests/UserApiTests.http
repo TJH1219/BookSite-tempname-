@@ -26,7 +26,7 @@ Content-Type: application/json
        client.assert(response.body['user']['last_name'] === "last", "Last Name was not created")
    })
 
-    //Make sure the status code is correctd
+    //Make sure the status code is correct
     client.test("Status Code", function(){
         client.assert(response.status === 201, "Status Code was not 201")
     })
@@ -41,7 +41,7 @@ Content-Type: application/json
     "password": "Pdm4w567!"
 }
 
-> {%
+> {%0
     //Test to see if the request was successful as it should be
     client.test("Request Success", function(){
         client.assert(response.body['success'] === true, "Request was not successful")
