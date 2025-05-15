@@ -1,7 +1,9 @@
-from django.core.management import BaseCommand
+from django.core.management import BaseCommand, call_command
 from django.db import connection
 from django.apps import apps
 from django.conf import settings
+from django.db.migrations.loader import MigrationLoader
+
 
 class Command(BaseCommand):
     help = 'Reset Database tables and sequences for the api testing'
@@ -17,27 +19,37 @@ class Command(BaseCommand):
             'api'
         ]
 
-        models_to_reset = []
-        for app in custom_apps:
-            models_to_reset.extend(
-                apps.get_app_config(app).get_models()
-            )
+        try:
+            self.stdout.write('Checking for pending migrations...')
+            call_command('makemigrations', '--check', '--dry-run')
 
-        with connection.cursor() as cursor:
-            if connection.vendor == 'postgresql':
-                cursor.execute('SET session_replication_role = replica;')
+            # get a list of apps that have migrations
+            loader = MigrationLoader(connection)
+            apps_with_migrations = {migration[0] for migration in loader.applied_migrations}
 
-            try:
-                for model in models_to_reset:
-                    table_name = model._meta.db_table
-                    self.stdout.write(f"Resetting table: {table_name}")
 
-                    cursor.execute(f"TRUNCATE TABLE {table_name} RESTART IDENTITY CASCADE;")
+            #Revert custom apps migrations if migrations exist
+            for app in custom_apps:
+                if app in apps_with_migrations:
+                    self.stdout.write(f"Reverting Migrations for {app}")
+                    call_command('migrate', app, 'zero')
 
-                cursor.execute("Set session_replication_role = DEFAULT;")
-                self.stdout.write(self.style.SUCCESS('Database tables and sequences reset successfully'))
-            except Exception as e:
-                self.stdout.write(
-                    self.style.ERROR(f'Error resetting database tables and sequences: {str(e)}')
-                )
-                raise
+            django_apps = [
+                'admin',
+                'sessions'
+            ]
+            #Revert migrations for a builtin app if they exist
+
+            for app in django_apps:
+                if app in apps_with_migrations:
+                    self.stdout.write(f"Reverting Migrations for {app}")
+                    call_command("migrate", app, "zero")
+
+            self.stdout.write('Resetting database...')
+            call_command('migrate')
+
+            self.stdout.write(self.style.SUCCESS('Database reset successfully'))
+
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(str(e)))
+            raise

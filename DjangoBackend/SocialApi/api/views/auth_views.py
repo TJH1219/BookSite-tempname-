@@ -11,7 +11,6 @@ from api.serializers.user_serializer import UserSerializer
 
 
 class AuthViewSet(viewsets.GenericViewSet):
-
     def get_serializer_class(self):
         if self.action == 'register':
             return RegisterSerializer

@@ -8,20 +8,6 @@ class User(AbstractUser):
     dob = models.DateField(null=True, blank=True)
     email_verified = models.BooleanField(default=False)
 
-    groups = models.ManyToManyField(
-        'auth.Group',
-        related_name='api_user_set',
-        blank=True,
-        verbose_name='groups',
-        help_text='The groups this user belongs to.'
-    )
-    user_permissions = models.ManyToManyField(
-        'auth.Permission',
-        related_name='api_user_set',
-        blank=True,
-        verbose_name='user permissions',
-        help_text='Specific permissions for this user.'
-    )
 
 
     def has_role(self, role_name : str) -> bool:

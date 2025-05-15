@@ -41,7 +41,7 @@ Content-Type: application/json
     "password": "Pdm4w567!"
 }
 
-> {%0
+> {%
     //Test to see if the request was successful as it should be
     client.test("Request Success", function(){
         client.assert(response.body['success'] === true, "Request was not successful")
@@ -62,7 +62,47 @@ Content-Type: application/json
     })
 
     //Set the access token to a global variable for later tests
-    client.global.set("access_token", response.body['access'])
+    client.log("=== Login Response Debug ===");
+    client.log("Response status:", response.status);
+
+    if (response.status === 200) {
+        // Log the raw response to see what we're getting
+        client.log("Raw response body:", response.body);
+
+        // Store the token
+        const token = response.body.access;
+        client.global.set("access_token", token);
+
+        // Debug log to verify token
+        client.log("Stored token:", client.global.get("access_token"));
+    } else {
+        client.log("Login failed");
+        client.log("Response body:", response.body);
+    }
+
+
  %}
+
+### Get user data
+GET localhost:8000/users/1/
+Authorization: Bearer {{access_token}}
+
+> {%
+    // Check that the correct status was returned
+    client.test("Status Code", function(){
+        client.assert(response.status === 200, "Status is not 200")
+  })
+    // Check that the body of the response matches what is expected
+    client.test("Body Test", function(){
+        client.assert(response.body["id"] === 1, "Id was not 1")
+        client.assert(response.body["username"] === "user", "Username was not user")
+        client.assert(response.body["email"] === "email@email.com", "Incorrect email")
+        client.assert(response.body["email_verified"] === false, "Email should not be verified")
+        client.assert(response.body["first_name"] === "first", "First name was not first")
+        client.assert(response.body["last_name"] === "last", "Last name was not last")
+        client.assert(response.body["profile"] === null, "Profile should be null" )
+    })
+  %}
+
 ### Test DB Reset
 POST localhost:8000/api/reset_db/
