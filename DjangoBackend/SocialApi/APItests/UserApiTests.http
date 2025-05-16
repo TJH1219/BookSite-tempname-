@@ -100,7 +100,9 @@ Authorization: Bearer {{access_token}}
         client.assert(response.body["email_verified"] === false, "Email should not be verified")
         client.assert(response.body["first_name"] === "first", "First name was not first")
         client.assert(response.body["last_name"] === "last", "Last name was not last")
-        client.assert(response.body["profile"] === null, "Profile should be null" )
+        client.assert(response.body["profile"]["id"] === 1, "Profile should be null" )
+        client.assert(response.body["profile"]["user"] === 1, "Bio should be null")
+        client.assert(response.body["profile"]["profile_image"] === null, "Bio should be null")
     })
   %}
 

@@ -9,7 +9,6 @@ class User(AbstractUser):
     email_verified = models.BooleanField(default=False)
 
 
-
     def has_role(self, role_name : str) -> bool:
         return self.roles.filter(name=role_name).exists()
 
