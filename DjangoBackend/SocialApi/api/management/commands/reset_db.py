@@ -15,6 +15,15 @@ class Command(BaseCommand):
             )
             return
 
+        with connection.cursor() as cursor:
+            self.stdout.write('Dropping token blacklist tables...')
+            cursor.execute("""
+                DROP TABLE IF EXISTS token_blacklist_outstandingtoken CASCADE;
+                DROP TABLE IF EXISTS token_blacklist_blacklistedtoken CASCADE;
+                DELETE FROM django_migrations WHERE app = 'token_blacklist';
+            """)
+
+
         custom_apps = [
             'api'
         ]
@@ -36,7 +45,10 @@ class Command(BaseCommand):
 
             django_apps = [
                 'admin',
-                'sessions'
+                'sessions',
+                'rest_framework_simplejwt.token_blacklist',
+                'auth',
+                'contenttypes'
             ]
             #Revert migrations for a builtin app if they exist
 

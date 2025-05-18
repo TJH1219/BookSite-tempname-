@@ -70,8 +70,8 @@ Content-Type: application/json
         client.log("Raw response body:", response.body);
 
         // Store the token
-        const token = response.body.access;
-        client.global.set("access_token", token);
+        client.global.set("access_token", response.body.access);
+        client.global.set("refresh_token", response.body.refresh);
 
         // Debug log to verify token
         client.log("Stored token:", client.global.get("access_token"));
@@ -82,6 +82,14 @@ Content-Type: application/json
 
 
  %}
+
+### Post To Get New Access Token
+POST localhost:8000/token/refresh/
+Content-Type: application/json
+
+{
+    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc0NzY4ODg5MywiaWF0IjoxNzQ3NjAyNDkzLCJqdGkiOiI2ZGRmNDg1ZWM5NGE0ZDVmYjMwYjk3N2U0ZTc2M2ExMiIsInVzZXJfaWQiOjF9.qFH_v4tmpRaqlRP-R5qwXuhxjg29Wm2TAmTrujUEwv0"
+}
 
 ### Get user data
 GET localhost:8000/users/1/
@@ -105,6 +113,94 @@ Authorization: Bearer {{access_token}}
         client.assert(response.body["profile"]["profile_image"] === null, "Bio should be null")
     })
   %}
+
+### Log User Out
+POST localhost:8000/auth/logout/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "refresh": "{{refresh_token}}"
+}
+
+### Patch user id 1
+PATCH localhost:8000/users/1/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "username": "updateduser"
+}
+
+### Get user data after patch
+GET localhost:8000/users/1/
+Authorization: Bearer {{access_token}}
+
+> {%
+    // Check that the correct status was returned
+    client.test("Status Code", function(){
+        client.assert(response.status === 200, "Status is not 200")
+  })
+    // Check that the body of the response matches what is expected
+    client.test("Body Test", function(){
+        client.assert(response.body["id"] === 1, "Id was not 1")
+        client.assert(response.body["username"] === "updateduser", "Username was not user")
+        client.assert(response.body["email"] === "email@email.com", "Incorrect email")
+        client.assert(response.body["email_verified"] === false, "Email should not be verified")
+        client.assert(response.body["first_name"] === "first", "First name was not first")
+        client.assert(response.body["last_name"] === "last", "Last name was not last")
+        client.assert(response.body["profile"]["id"] === 1, "Profile should be null" )
+        client.assert(response.body["profile"]["user"] === 1, "Bio should be null")
+        client.assert(response.body["profile"]["profile_image"] === null, "Bio should be null")
+    })
+  %}
+
+### Put user 1
+PUT localhost:8000/users/1/
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+    "username": "putuser",
+    "password": "Pdm4w579!!",
+    "confirmed_password": "Pdm4w579!",
+    "email": "newemail@email.com",
+    "first_name": "newfirst",
+    "last_name": "newlast"
+}
+
+> {%
+    // Check that the body of the response matches what is expected
+    client.test("Status Test", function(){
+        client.assert(response.status === 200, "Status is not 200")
+    })
+  %}
+
+### Get User After Put
+GET localhost:8000/users/1/
+Authorization: Bearer {{access_token}}
+
+> {%
+    // Check that the body of the response matches what is expected
+    client.test("Body Test", function(){
+        client.assert(response.body["username"] === "putuser", "Username was not user")
+        client.assert(response.body["email"] === "newemail@email.com", "Incorrect email")
+        client.assert(response.body["email_verified"] === false, "Email should not be verified")
+        client.assert(response.body["first_name"] === "newfirst", "First name was not first")
+        client.assert(response.body["last_name"] === "newlast", "Last name was not last")
+        client.assert(response.body["profile"]["id"] === 1, "Profile should be null" )
+        client.assert(response.body["profile"]["user"] === 1, "Bio should be null")
+        client.assert(response.body["profile"]["profile_image"] === null, "Bio should be null")
+    })
+  %}
+
+###Delete User 1
+DELETE localhost:8000/users/1/
+Authorization: Bearer {{access_token}}
+
+### Get User After Delete
+GET localhost:8000/users/1/
+Authorization: Bearer {{access_token}}
 
 ### Test DB Reset
 POST localhost:8000/api/reset_db/

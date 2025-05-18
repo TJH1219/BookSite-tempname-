@@ -4,11 +4,16 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
 
 from api.permissions import IsOwnerOrAdmin
 from api.serializers.user_serializer import UserSerializer
 
 User = get_user_model()
+
+
+class BlackListedToken:
+    pass
 
 
 class UserViewSet(viewsets.ModelViewSet):

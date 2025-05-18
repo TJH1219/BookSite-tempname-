@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.exceptions import TokenError
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 
 from api.serializers.auth_serializers import RegisterSerializer, LoginSerializer
 from api.serializers.user_serializer import UserSerializer
@@ -77,6 +77,7 @@ class AuthViewSet(viewsets.GenericViewSet):
     @action(methods=['post'], detail=False)
     def logout(self, request):
         refresh_token = request.data.get('refresh')
+        access_token = request.auth
         if not refresh_token:
             return Response(
                 {"success": False, "errors": "Refresh token is required."},
@@ -85,6 +86,7 @@ class AuthViewSet(viewsets.GenericViewSet):
         try:
             token = RefreshToken(refresh_token)
             token.blacklist()
+            AccessToken(access_token).blacklist()
             return Response(
                 {"success": True, "message": "User logged out successfully."},
                 status=status.HTTP_200_OK
